@@ -48,13 +48,15 @@ def get_xml_files():
     root=tree.getroot()
 
     children=root.getchildren()
-    link=[]
+    links=[]
 
     for child in children:
         node=child.getchildren()
         for n in node:
             if("http://www" in str(n.text)):
-                link.append(n.text)
+                links.append(n.text)
+    
+    return links
 
     # for child in root.iter('loc'):
     #     #for every loc, check if there is a "0000000000" present
