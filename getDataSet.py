@@ -11,6 +11,9 @@ import requests
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import sys
+import os
+import webbrowser
+import time
 # from urllib.request import urlretrieve as retrieve
 ################################     insider def      ################################
 
@@ -83,27 +86,37 @@ def get_xml_files():
 # GETTING DATA SET
 
 
-def get_data_set():
-    get_tickers()
-    print("done")
+def csv_to_list(path):
+    lines = []
+    with open(path) as file:
+        lines = file.readlines()
+    return lines
 
 # get all trading ticker symbols on nasdaq and nyse
+
+
+def get_symbols(list):
+    new_list = []
+    for line in list:
+        end = line.find('\"', 1, 7)
+        new_list.append((line[1: end]))
+    new_list.pop(0)
+    return new_list
 
 
 def get_tickers():
     # urls for download
     nasdaq_url = "https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nasdaq&render=download"
     nyse_url = "https://old.nasdaq.com/screening/companies-by-name.aspx?letter=0&exchange=nyse&render=download"
-
-    print(sys.version)
+    path = "/Users/olimjonnematov/Downloads/companylist.csv"
     # download csv for nasdaq stocks
-    try:
-        r = requests.get(nasdaq_url)
-        print(r.content)
-        with open('/Users/olimjonnematov/Downloads/nasdaq_screener.csv', 'wb') as f:
-            f.write(r.content)
-    except:
-        print("An exception occurred")
+    # get nasdaq
+    webbrowser.open(nasdaq_url)
+    time.sleep(5)
+    lines = csv_to_list(path)
+    lines = get_symbols(lines)
+    os.remove(path)
+    # get nyse
 
 
 # for each symbol, use api to get perspective 4 indicators
@@ -111,4 +124,5 @@ def get_tickers():
 
 # write data in a file in this syntax: SYMBOL: SMA -- MACD -- RSI -- OBV
 ################################     __Main__      ################################
-get_data_set()
+get_tickers()
+print("done")
