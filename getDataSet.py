@@ -112,11 +112,20 @@ def get_tickers():
     # download csv for nasdaq stocks
     # get nasdaq
     webbrowser.open(nasdaq_url)
-    time.sleep(5)
-    lines = csv_to_list(path)
-    lines = get_symbols(lines)
+    time.sleep(2.5)
+    nasdaq_list = csv_to_list(path)
+    nasdaq_list = get_symbols(nasdaq_list)
     os.remove(path)
     # get nyse
+    webbrowser.open(nyse_url)
+    time.sleep(2.5)
+    nyse_list = csv_to_list(path)
+    nyse_list = get_symbols(nyse_list)
+
+    # combine the lists
+    full_list = nasdaq_list+nyse_list
+    os.remove(path)
+    return full_list
 
 
 # for each symbol, use api to get perspective 4 indicators
@@ -124,5 +133,6 @@ def get_tickers():
 
 # write data in a file in this syntax: SYMBOL: SMA -- MACD -- RSI -- OBV
 ################################     __Main__      ################################
-get_tickers()
+# get all stock symbols
+stock_symbols = get_tickers()
 print("done")
