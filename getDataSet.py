@@ -7,13 +7,17 @@
 #   4)store data in an array
 #   4)
 #  *#
-import requests
+
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import sys
 import os
 import webbrowser
 import time
+import json
+import requests
+import asyncio
+from datetime import datetime
 # from urllib.request import urlretrieve as retrieve
 ################################     insider def      ################################
 
@@ -47,7 +51,6 @@ def get_daily_index_record():
 
     # open the url in a file
     open('edgar.xml', 'wb').write(r.content)
-    print(daily_index_url)
 
 
 def get_xml_files():
@@ -92,8 +95,6 @@ def csv_to_list(path):
         lines = file.readlines()
     return lines
 
-# get all trading ticker symbols on nasdaq and nyse
-
 
 def get_symbols(list):
     new_list = []
@@ -112,13 +113,13 @@ def get_tickers():
     # download csv for nasdaq stocks
     # get nasdaq
     webbrowser.open(nasdaq_url)
-    time.sleep(2.5)
+    time.sleep(2)
     nasdaq_list = csv_to_list(path)
     nasdaq_list = get_symbols(nasdaq_list)
     os.remove(path)
     # get nyse
     webbrowser.open(nyse_url)
-    time.sleep(2.5)
+    time.sleep(2)
     nyse_list = csv_to_list(path)
     nyse_list = get_symbols(nyse_list)
 
@@ -128,11 +129,80 @@ def get_tickers():
     return full_list
 
 
-# for each symbol, use api to get perspective 4 indicators
+def get_indicators(stock):
+    # date = datetime.today().strftime('%Y-%m-%d')
+    # time.sleep(2)
+    date = "2020-12-24"
+    try:
+        # SMA https://www.alphavantage.co/query?function=SMA&symbol=IBM&interval=weekly&time_period=10&series_type=open&apikey=demo
+        response = requests.get("https://www.alphavantage.co/query?function=SMA&symbol=" +
+                                stock + "&interval=weekly&time_period=10&series_type=open&apikey=I1EB1GQCSSFFJ3LD")
+        response_dict = json.loads(response.text)
+        sma = (response_dict["Technical Analysis: SMA"]
+               [str(date)]["SMA"])
+        response.close()
+    except:
+        sma = "na"
+
+    try:
+        # MACD https://www.alphavantage.co/query?function=MACD&symbol=IBM&interval=daily&series_type=open&apikey=demo
+        response = requests.get("https://www.alphavantage.co/query?function=MACD&symbol=" +
+                                stock+"&interval=daily&series_type=open&apikey=I1EB1GQCSSFFJ3LD")
+        response_dict = json.loads(response.text)
+        macd = (response_dict["Technical Analysis: MACD"]
+                [str(date)]["MACD"])
+        response.close()
+    except:
+        macd = "na"
+
+    try:
+        # RSI https://www.alphavantage.co/query?function=RSI&symbol=IBM&interval=weekly&time_period=10&series_type=open&apikey=demo
+        response = requests.get("https://www.alphavantage.co/query?function=RSI&symbol=" +
+                                stock + "&interval=weekly&time_period=10&series_type=open&apikey=I1EB1GQCSSFFJ3LD")
+        response_dict = json.loads(response.text)
+        rsi = (response_dict["Technical Analysis: RSI"]
+               [str(date)]["RSI"])
+        response.close()
+    except:
+        rsi = "na"
+
+    try:
+        # OBV https://www.alphavantage.co/query?function=OBV&symbol=IBM&interval=weekly&apikey=demo
+        response = requests.get("https://www.alphavantage.co/query?function=OBV&symbol=" +
+                                stock+"&interval=weekly&apikey=I1EB1GQCSSFFJ3LD")
+        response_dict = json.loads(response.text)
+        obv = (response_dict["Technical Analysis: OBV"]
+               [str(date)]["OBV"])  # change this to current date
+        response.close()
+    except:
+        obv = "na"
+
+    return[stock+" " + str(sma)+" "+str(macd)+" "+str(rsi)+" "+str(obv)]
 
 
-# write data in a file in this syntax: SYMBOL: SMA -- MACD -- RSI -- OBV
+def for_all(list):
+    # api key fro stocks:  I1EB1GQCSSFFJ3LD
+    # documentation: https://www.alphavantage.co/documentation/
+    updated_list = []
+
+    # for stock in list:
+    for stock in list:
+        updated_list.append(get_indicators(stock))
+    return updated_list
+
+
+def write_data_to_file(list):
+    with open('data.txt', 'w') as f:
+        for item in list:
+            f.write("%s\n" % item)
+
+
 ################################     __Main__      ################################
-# get all stock symbols
+# get all trading ticker symbols on nasdaq and nyse
 stock_symbols = get_tickers()
+print("found "+str(len(stock_symbols))+" tickers")
+
+# for each symbol, use api to get perspective SMA -- MACD -- RSI -- OBV
+write_data_to_file(for_all(stock_symbols))
+
 print("done")
