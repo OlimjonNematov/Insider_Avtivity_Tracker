@@ -186,7 +186,7 @@ def for_all(list):
     updated_list = []
 
     # for stock in list:
-    for stock in list:
+    for stock in ["AAPL", "AAL", "CCL", "NIO", "SPCE"]:
         updated_list.append(get_indicators(stock))
     return updated_list
 
